@@ -1,6 +1,6 @@
 ---
 title: "MATH 216 Homework 2"
-author: "WRITE YOUR NAME HERE"
+author: "Katherine Hobbs"
 output:
   html_document:
     toc: true
@@ -13,6 +13,8 @@ output:
 library(ggplot2)
 library(dplyr)
 library(readr) 
+library(tidyr)
+library(forcats)
 ```
 
 
@@ -29,12 +31,16 @@ profiles <- read_csv(file="profiles.csv")
 
 Please indicate
 
-* Who you collaborated with:
-* Roughly how much time you spent on this HW so far:
+* Who you collaborated with: Amanda Hotvedt
+* Roughly how much time you spent on this HW so far: 4-5
 * The URL of the RPubs published URL [here](https://www.nhl.com/).
-* What gave you the most trouble:
+* What gave you the most trouble: 
+
+I have not yet figured out how to make my radio button for the shiny app functional. 
+
 * Any comments you have:
 
+There is still much more that I can do with the data, so I will work on adding more visuals and summary statistics over the next week. I am having trouble figuring out how to arrange certain summary outputs in descending or ascending order, so I will work on that as well.
 
 
 ## Question 1:
@@ -50,6 +56,67 @@ all keeping in mind in HW-3, you will be fitting a logistic regression to
 predict a user's gender based on these variables.
 
 ```{r, echo=TRUE, message=TRUE, warning=TRUE, fig.width=8, fig.height=4.5}
+
+profiles <- profiles %>%
+  mutate(is_female = ifelse(sex=="f", 1, 0))
+
+profiles_less <- profiles %>% 
+  select(orientation, is_female, income, job)
+
+#Average Income in Full Data Set
+
+profiles_less %>% 
+  summarise("Avg Income" = mean(income))
+
+#Average Income without "-1" values
+
+profiles_less2 <- profiles_less %>% 
+  filter(income != -1) 
+
+profiles_less2 %>% 
+  summarise("Adjusted Avg Income" = mean(income))
+
+ggplot(data=profiles_less2, aes(x=income)) + geom_histogram(binwidth = 10000)
+
+#Average Income by Gender
+
+profiles_less2 %>% 
+  group_by(is_female) %>% 
+  summarise("Avg Income By Gender" = mean(income))
+
+ggplot(data=profiles_less2, aes(x=income, y=..density..)) + geom_histogram(binwidth = 20000) + facet_wrap(~is_female)
+
+#Average Incombe by Job
+
+profiles_less2 %>% 
+  group_by(job) %>% 
+  summarise("Avg Income By Job" = mean(income)) 
+
+#Gender Proportions by Job
+
+profiles_less2 %>% 
+  group_by(job) %>% 
+  summarise("Gender Prop by Job" = mean(is_female))
+
+
+#Average Income by Job and Gender
+
+profiles_less2 %>% 
+  group_by(job, is_female) %>% 
+  summarise("Avg Income By Job and Gender" = mean(income)) %>% 
+  spread(key=is_female, value= "Avg Income By Job and Gender")
+
+#Gender Proportions by Orientation
+
+profiles_less2 %>% 
+  group_by(orientation) %>% 
+  summarise("Gender Prop by Job" = mean(is_female))
+
+#Average Incombe by Orientation
+
+profiles_less2 %>% 
+  group_by(orientation) %>% 
+  summarise("Avg Income By Orientation" = mean(income)) 
 
 ```
 
