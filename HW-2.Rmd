@@ -15,6 +15,7 @@ library(dplyr)
 library(readr) 
 library(tidyr)
 library(forcats)
+library(knitr)
 ```
 
 
@@ -36,11 +37,9 @@ Please indicate
 * The URL of the RPubs published URL [here](https://www.nhl.com/).
 * What gave you the most trouble: 
 
-I have not yet figured out how to make my radio button for the shiny app functional. 
-
 * Any comments you have:
 
-There is still much more that I can do with the data, so I will work on adding more visuals and summary statistics over the next week. I am having trouble figuring out how to arrange certain summary outputs in descending or ascending order, so I will work on that as well.
+There is still much that I can do with the data, so I will work on adding more visuals and summary statistics over the next week. I am having trouble figuring out how to arrange certain summary outputs in descending or ascending order, so I will work on that as well.
 
 
 ## Question 1:
@@ -61,7 +60,7 @@ profiles <- profiles %>%
   mutate(is_female = ifelse(sex=="f", 1, 0))
 
 profiles_less <- profiles %>% 
-  select(orientation, is_female, income, job)
+  select(religion, is_female, income, job)
 
 #Average Income in Full Data Set
 
@@ -84,19 +83,27 @@ profiles_less2 %>%
   group_by(is_female) %>% 
   summarise("Avg Income By Gender" = mean(income))
 
-ggplot(data=profiles_less2, aes(x=income, y=..density..)) + geom_histogram(binwidth = 20000) + facet_wrap(~is_female)
-
+ggplot(data=profiles_less2, aes(x=income, y=..density..)) + 
+  geom_histogram(binwidth = 20000) + 
+  facet_wrap(~is_female) +
+  xlab("Income") +
+  ylab("Density") 
+  
 #Average Incombe by Job
 
 profiles_less2 %>% 
   group_by(job) %>% 
-  summarise("Avg Income By Job" = mean(income)) 
+  summarise("Avg Income By Job" = mean(income))  %>% 
+  arrange(desc("Avg Income By Job"))
+
+#arrange is not working here
 
 #Gender Proportions by Job
 
 profiles_less2 %>% 
   group_by(job) %>% 
-  summarise("Gender Prop by Job" = mean(is_female))
+  summarise("Gender Prop by Job" = mean(is_female)) %>% 
+  arrange(desc("Gender Prop by Job"))
 
 
 #Average Income by Job and Gender
@@ -104,22 +111,74 @@ profiles_less2 %>%
 profiles_less2 %>% 
   group_by(job, is_female) %>% 
   summarise("Avg Income By Job and Gender" = mean(income)) %>% 
-  spread(key=is_female, value= "Avg Income By Job and Gender")
+  spread(key=is_female, value= "Avg Income By Job and Gender") 
 
-#Gender Proportions by Orientation
+#Group the Religions
 
-profiles_less2 %>% 
-  group_by(orientation) %>% 
-  summarise("Gender Prop by Job" = mean(is_female))
+profiles_religion <- profiles_less %>% 
+  mutate(grouped_religion = fct_recode(religion,
+                  "agnosticism" = "agnosticism",
+                  "agnosticism" = "agnosticism and laughing about it",
+                  "agnosticism" = "agnosticism and somewhat serious about it",
+                  "agnosticism" = "agnosticism and very serious about it",
+                  "agnosticism" = "agnosticism but not too serious about it",
+                  "atheism" = "atheism",
+                  "atheism" = "atheism and laughing about it",
+                  "atheism" = "atheism and somewhat serious about it",
+                  "atheism" = "atheism and very serious about it",
+                  "atheism" = "atheism but not too serious about it",
+                  "buddhism" = "buddhism",
+                  "buddhism" = "buddhism and laughing about it",
+                  "buddhism" = "buddhism and somewhat serious about it",
+                  "buddhism" = "buddhism and very serious about it",
+                  "buddhism" = "buddhism but not too serious about it",
+                  "catholism" = "catholicism",
+                  "catholism" = "catholicism and laughing about it",
+                  "catholism" = "catholicism and somewhat serious about it",
+                  "catholism" = "catholicism and very serious about it",
+                  "catholism" = "catholicism but not too serious about it",
+                  "christianity" = "christianity",
+                  "christianity" = "christianity and laughing about it",
+                  "christianity" ="christianity and somewhat serious about it",
+                  "christianity" = "christianity and very serious about it",
+                  "christianity" = "christianity but not too serious about it",
+                  "hinduism" = "hinduism",
+                  "hinduism" = "hinduism and laughing about it",
+                  "hinduism" = "hinduism and somewhat serious about it",
+                  "hinduism" = "hinduism and very serious about it",
+                  "hinduism" = "hinduism but not too serious about it",
+                  "islam" = "islam",
+                  "islam" = "islam and laughing about it",
+                  "islam" = "islam and somewhat serious about it",
+                  "islam" = "islam and very serious about it",
+                  "islam" = "islam but not too serious about it",
+                  "judaism" = "judaism",
+                  "judaism" = "judaism and laughing about it",
+                  "judaism" = "judaism and somewhat serious about it",
+                  "judaism" = "judaism and very serious about it",
+                  "judaism" = "judaism but not too serious about it",
+                  "other" = "other",
+                  "other" = "other and laughing about it",
+                  "other" = "other and somewhat serious about it",
+                  "other" = "other and very serious about it",
+                  "other" = "other but not too serious about it"))
 
-#Average Incombe by Orientation
+#Proportion Female By Religion
 
-profiles_less2 %>% 
-  group_by(orientation) %>% 
-  summarise("Avg Income By Orientation" = mean(income)) 
+profiles_religion %>% 
+  group_by(grouped_religion) %>% 
+  summarise("Gender Prop by Religion" = mean(is_female)) %>% 
+  kable() 
+
+profiles_religion <- profiles_religion%>% 
+  group_by(grouped_religion) %>% 
+  mutate("Gender Prop by Religion" = mean(is_female))
+
+barplot(profiles_religion, aes(x=grouped_religion, y="Prop Gender By Religion")) 
+
+#not sure why the barplot is not working
 
 ```
-
 
 
 ## Question 2:

@@ -22,14 +22,25 @@ You can embed Shiny inputs and outputs in your document. Outputs are automatical
 
 inputPanel(
   # Genre
-  radioButtons("Genre", label = "Choose a Genre:", c("Comedies"=filter("Comedy"==1), "Non-Comedies"=filter("Comedy"==0)))
+  radioButtons("Genre", label = "Choose a Genre:", c("Comedies"= "Comedies", "Other" = "Other"))
 )
-  
+
 renderPlot({
 
   # Generate Plots
-  ggplot(data=movies, aes(x=budget, y=rating)) + 
-    geom_point()
+
+  movies_input <- movies %>% 
+    mutate(Genre = ifelse(Comedy == 1, "Comedies", "Other")) %>% 
+    filter(!is.na(budget)) %>% 
+    filter(Genre == input$Genre)
+  
+  ggplot(data=movies_input, aes(x=budget, y=rating)) + 
+    geom_point() +
+    geom_smooth() +
+    xlab("Budget") +
+    ylab("Rating") +
+    ggtitle("Ratings vs. Budget for Comedies and Non-Comedies")
+  
 
 })
 ```
