@@ -2,11 +2,13 @@
 title: "MATH 216 Homework 2"
 author: "Katherine Hobbs"
 output:
+  pdf_document:
+    toc: yes
   html_document:
-    toc: true
-    toc_float: true
-    collapsed: false
-    smooth_scroll: false
+    collapsed: no
+    smooth_scroll: no
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r, echo=FALSE, message=FALSE}
@@ -34,7 +36,7 @@ Please indicate
 
 * Who you collaborated with: Amanda Hotvedt
 * Roughly how much time you spent on this HW so far: 4-5
-* The URL of the RPubs published URL [here](https://www.nhl.com/).
+* The URL of the RPubs published URL [here](http://rpubs.com/khobbs/).
 * What gave you the most trouble: 
 
 * Any comments you have:
@@ -93,25 +95,26 @@ ggplot(data=profiles_less2, aes(x=income, y=..density..)) +
 
 profiles_less2 %>% 
   group_by(job) %>% 
-  summarise("Avg Income By Job" = mean(income))  %>% 
-  arrange(desc("Avg Income By Job"))
-
-#arrange is not working here
+  summarise(`Avg Income By Job` = mean(income)) %>% 
+  arrange(desc(`Avg Income By Job`)) %>% 
+  kable()
 
 #Gender Proportions by Job
 
 profiles_less2 %>% 
   group_by(job) %>% 
-  summarise("Gender Prop by Job" = mean(is_female)) %>% 
-  arrange(desc("Gender Prop by Job"))
-
+  summarise(`Gender Prop by Job` = mean(is_female)) %>% 
+  arrange(desc(`Gender Prop by Job`)) %>% 
+  kable()
 
 #Average Income by Job and Gender
 
 profiles_less2 %>% 
   group_by(job, is_female) %>% 
-  summarise("Avg Income By Job and Gender" = mean(income)) %>% 
-  spread(key=is_female, value= "Avg Income By Job and Gender") 
+  summarise(`Avg Income By Job and Gender` = mean(income)) %>% 
+  spread(key=is_female, value= `Avg Income By Job and Gender`) %>% 
+  arrange(desc(`0`)) %>% 
+  kable()
 
 #Group the Religions
 
@@ -167,16 +170,17 @@ profiles_religion <- profiles_less %>%
 
 profiles_religion %>% 
   group_by(grouped_religion) %>% 
-  summarise("Gender Prop by Religion" = mean(is_female)) %>% 
+  summarise(`Gender Prop by Religion` = mean(is_female)) %>% 
+  arrange(desc(`Gender Prop by Religion`)) %>% 
   kable() 
 
 profiles_religion <- profiles_religion%>% 
   group_by(grouped_religion) %>% 
-  mutate("Gender Prop by Religion" = mean(is_female))
+  mutate(`Gender Prop by Religion` = mean(is_female))
 
-barplot(profiles_religion, aes(x=grouped_religion, y="Prop Gender By Religion")) 
+ggplot(profiles_religion, aes(x=grouped_religion, y= `Gender Prop by Religion`))  + geom_point()
 
-#not sure why the barplot is not working
+#will make a ggplot in descending order to represent the distribution
 
 ```
 
