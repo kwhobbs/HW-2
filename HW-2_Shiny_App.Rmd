@@ -41,6 +41,27 @@ renderPlot({
     ylab("Rating") +
     ggtitle("Ratings vs. Budget for Comedies and Non-Comedies")
   
+})
+
+
+renderPlot({
+  
+  movies_input2 <- movies %>% 
+    mutate(Genre = ifelse(Comedy == 1, "Comedies", "Other")) %>% 
+    filter(!is.na(budget)) %>% 
+    filter(Genre == input$Genre)
+  
+  ggplot(data=movies_input2, aes(x=budget, y=rating)) + 
+    geom_point() +
+    geom_smooth() +
+    scale_x_log10() +
+    xlab("Budget") +
+    ylab("Rating") +
+    ggtitle("Ratings vs. Budget for Comedies and Non-Comedies with a Log10 Scale")
 
 })
+
+
 ```
+Due to the high density of data points near the y-axis in the first plot, a second plot is included with a log10 scale on the x-axis. The latter provides a better visualization of the relationship between budget and rating for movies with low budgets. 
+

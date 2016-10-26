@@ -2,13 +2,13 @@
 title: "MATH 216 Homework 2"
 author: "Katherine Hobbs"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     collapsed: no
     smooth_scroll: no
     toc: yes
     toc_float: yes
+  pdf_document:
+    toc: yes
 ---
 
 ```{r, echo=FALSE, message=FALSE}
@@ -35,14 +35,13 @@ profiles <- read_csv(file="profiles.csv")
 Please indicate
 
 * Who you collaborated with: Amanda Hotvedt
-* Roughly how much time you spent on this HW so far: 4-5
+* Roughly how much time you spent on this HW so far: 7
 * The URL of the RPubs published URL [here](http://rpubs.com/khobbs/).
 * What gave you the most trouble: 
 
 * Any comments you have:
 
-There is still much that I can do with the data, so I will work on adding more visuals and summary statistics over the next week. I am having trouble figuring out how to arrange certain summary outputs in descending or ascending order, so I will work on that as well.
-
+After our discussion about making smaller buckets for the income variable (ex. high income, medium income, low income), I tried to use fct_recode like I did with the religion variable to group the categorial variables. While I understand it conceptually, I wasn't able to get the code to work. 
 
 ## Question 1:
 
@@ -57,6 +56,7 @@ all keeping in mind in HW-3, you will be fitting a logistic regression to
 predict a user's gender based on these variables.
 
 ```{r, echo=TRUE, message=TRUE, warning=TRUE, fig.width=8, fig.height=4.5}
+#Select Only the Needed Variables From the Dataset
 
 profiles <- profiles %>%
   mutate(is_female = ifelse(sex=="f", 1, 0))
@@ -64,18 +64,40 @@ profiles <- profiles %>%
 profiles_less <- profiles %>% 
   select(religion, is_female, income, job)
 
-#Average Income in Full Data Set
+#Gender and Income
+
+#Number of People Who Did Not Report Income
 
 profiles_less %>% 
-  summarise("Avg Income" = mean(income))
+  filter(income==-1) %>% 
+  tally()
 
-#Average Income without "-1" values
+#Number and Proportion Female Who Did Not Report Income
+
+profiles_less %>%
+  filter(income==-1) %>% 
+  group_by(is_female) %>% 
+  tally() %>% 
+  kable()
+
+profiles_less %>%
+  filter(income==-1) %>% 
+  summarise(`Prop Female of Non-Reporters`=mean(is_female)) %>% 
+  kable()
+
+#Dataset without -1 Income Values
 
 profiles_less2 <- profiles_less %>% 
   filter(income != -1) 
 
-profiles_less2 %>% 
-  summarise("Adjusted Avg Income" = mean(income))
+#Distribution of Income
+
+profiles_less %>% 
+  group_by(income) %>% 
+  tally() %>% 
+  kable()
+
+#Distribution of Reported Incomes
 
 ggplot(data=profiles_less2, aes(x=income)) + geom_histogram(binwidth = 10000)
 
@@ -83,21 +105,38 @@ ggplot(data=profiles_less2, aes(x=income)) + geom_histogram(binwidth = 10000)
 
 profiles_less2 %>% 
   group_by(is_female) %>% 
-  summarise("Avg Income By Gender" = mean(income))
+  summarise("Avg Income By Gender" = mean(income)) %>% 
+  kable()
+
+#Distribution of Income by Gender
 
 ggplot(data=profiles_less2, aes(x=income, y=..density..)) + 
   geom_histogram(binwidth = 20000) + 
   facet_wrap(~is_female) +
   xlab("Income") +
   ylab("Density") 
-  
-#Average Incombe by Job
 
-profiles_less2 %>% 
-  group_by(job) %>% 
-  summarise(`Avg Income By Job` = mean(income)) %>% 
-  arrange(desc(`Avg Income By Job`)) %>% 
+profiles %>% 
+  group_by(income) %>% 
+  summarise(mean(is_female)) %>% 
   kable()
+
+#Proportion Female by Income
+
+profiles_less %>%
+  group_by(income) %>% 
+  summarise(`Proportion Female`=mean(is_female), "Number"= n()) %>% 
+  kable()
+
+profiles_new <- profiles_less %>%
+  group_by(income) %>% 
+  mutate(`Proportion Female`=mean(is_female), "Number"= n()) 
+
+ggplot(profiles_new, aes(x=income, y=`Proportion Female`)) +
+  geom_point() +
+  geom_hline(yintercept= 0.4)
+
+#Gender and Job
 
 #Gender Proportions by Job
 
@@ -106,6 +145,16 @@ profiles_less2 %>%
   summarise(`Gender Prop by Job` = mean(is_female)) %>% 
   arrange(desc(`Gender Prop by Job`)) %>% 
   kable()
+
+profiles_less2 <- profiles_less2 %>% 
+  group_by(job) %>% 
+  mutate(`Gender Prop by Job` = mean(is_female)) 
+
+ggplot(profiles_less2, aes(x=job, y= `Gender Prop by Job`))  + 
+  geom_point() + 
+  coord_flip() +
+  geom_hline(yintercept= 0.4) +
+  xlab("Job")
 
 #Average Income by Job and Gender
 
@@ -116,10 +165,10 @@ profiles_less2 %>%
   arrange(desc(`0`)) %>% 
   kable()
 
-#Group the Religions
+#Religion Categories are Grouped By Major Religion
 
 profiles_religion <- profiles_less %>% 
-  mutate(grouped_religion = fct_recode(religion,
+  mutate(`Grouped Religion` = fct_recode(religion,
                   "agnosticism" = "agnosticism",
                   "agnosticism" = "agnosticism and laughing about it",
                   "agnosticism" = "agnosticism and somewhat serious about it",
@@ -169,20 +218,37 @@ profiles_religion <- profiles_less %>%
 #Proportion Female By Religion
 
 profiles_religion %>% 
-  group_by(grouped_religion) %>% 
-  summarise(`Gender Prop by Religion` = mean(is_female)) %>% 
-  arrange(desc(`Gender Prop by Religion`)) %>% 
+  group_by(`Grouped Religion`) %>% 
+  summarise(`Prop Female` = mean(is_female), `Number`=n()) %>% 
+  arrange(desc(`Prop Female`)) %>% 
   kable() 
 
 profiles_religion <- profiles_religion%>% 
-  group_by(grouped_religion) %>% 
-  mutate(`Gender Prop by Religion` = mean(is_female))
+  group_by(`Grouped Religion`) %>% 
+  mutate(`Prop Female` = mean(is_female)) %>% 
+  ungroup() %>% 
+  mutate(`Grouped Religion` =fct_reorder(`Grouped Religion`,`Prop Female`))
 
-ggplot(profiles_religion, aes(x=grouped_religion, y= `Gender Prop by Religion`))  + geom_point()
+ggplot(profiles_religion, aes(x=`Grouped Religion`, y= `Prop Female`))  + 
+  geom_point() + 
+  geom_hline(yintercept= 0.4) +
+  xlab("Religion")
 
-#will make a ggplot in descending order to represent the distribution
+mean(profiles$is_female)
+
+
+#The line at y=0.40 on the plot is added as a reference tool, indicating the proportion of female respondents in the entire sample. 
 
 ```
+Notes:
+
+-43.4% of respondents who did not report their income were female. This gender distribution is not drastically different from the overall proportion of female respondents, 40%. Therefore, reporting income is not a strong predictor of gender.
+
+-The average female income is 86,633, significatly lower than the average male income of 110,984. Therefore, income can be a strong predictor of sex. Overall, the distribution of female incomes is shifted slightly farther to the left than the distribution of male incomes. Grouping the income variable into bigger buckets, for example into  high, medium, and low income, would simplify the model. 
+
+-Many jobs have gender distributions significantly different than the overall proportion of female respondents, 0.40. Therefore, depending on the specific job, job can be a moderate to strong predictor of sex.
+
+-Religion can also be a strong predictor of sex, depending on the specific religion. For religions with proportions of females close to 0.40, religion is not a powerful predictor of gender. On the other hand, for religions with proportions of females far from 0.40, religion is a powerful predictor of gender. For example, Islam is 26.6% women, compared to the overal 40% of respondents, indicating that religion is a strong predictor of sex for those who reported Islam. However, only 139 users reported Islam. Therefore, it is a strong predictor of sex for a very small subset of the population. It might not be worth including a separate coefficient for Islam in the model. In contrast, Christianity would be a moderately strong predictor of sex for a larger subset of people, and therefore might be more valuable to include in the model. Overall, it is important to note that 20,226 people did not report a religion and not reporting religion is not a strong predictor of sex, since the gender breakdown for that subset is very close to 0.40. 
 
 
 ## Question 2:
